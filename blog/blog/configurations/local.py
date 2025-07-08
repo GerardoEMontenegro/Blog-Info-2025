@@ -12,3 +12,5 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+os.environ['DJANGO__PORT'] = '3000'
