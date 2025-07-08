@@ -1,4 +1,4 @@
-from base import *
+from .base import *
 
 
 
@@ -27,3 +27,4 @@ DATABASES = {
 
     }
 }
+os.environ['DJANGO__PORT'] = '8080'
