@@ -6,7 +6,7 @@ from .base import *
 DEBUG = False
 
 #TODO configurar dominio de produccion
-ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'yourdomain.com']
 
 #configurar db para produccion
 DATABASES = {
