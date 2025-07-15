@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView
 
 
-class UserProfileView(TemplateView):
+class PostDetailView(TemplateView):
     template_name = 'post/post_detail.html'

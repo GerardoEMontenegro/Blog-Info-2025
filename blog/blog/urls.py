@@ -18,12 +18,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from blog.views import IndexView
+from registracion import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', IndexView.as_view(), name='home'),
     path('', include('apps.user.urls', namespace='user')),
     path('', include('apps.post.urls', namespace='post')),
+    path('registracion/', views.registro, name='registro'),
 ]
 
 if settings.DEBUG:
