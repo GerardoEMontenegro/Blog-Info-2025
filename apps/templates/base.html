@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>django base</title>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li>
+                <a href="/">Inicio</a>
+            </li>           
+            {% if user.is_authenticated %}
+            <li>
+                <a href="/logout">Cerrar Sesión</a>
+            <li>
+                <a href="/mis_posts">Mis Publicaciones</a>
+            </li>
+            <li>
+                <a href="/mis_posts/crear_post">Crear Publicacion</a>
+            </li>
+                
+            </li>
+            {% else %}
+            <li>
+                <a href="/registro">Registrarse</a>
+            </li>
+              <li>
+                <a href="/signin">Iniciar Sesion</a>
+            </li>
+            
+            {% endif %}
+        
+        </ul>
+    </nav>
+
+    {% block content %}
+    {% endblock %}
+</body>
+
+</html>

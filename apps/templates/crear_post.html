@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<h1>aca se crean los posts</h1>
+
+{{error}}
+
+<form method="POST">
+    
+    {% csrf_token %}
+    {{ form.as_p }}
+
+     <button>
+            Crear Post
+     </button>
+
+</form>
+
+   
+
+
+{% endblock %}
+
