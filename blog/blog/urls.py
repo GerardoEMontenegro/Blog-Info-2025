@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from blog.views import IndexView
-from registracion import views
+from registro import views
 
 
 urlpatterns = [
@@ -26,7 +26,7 @@ urlpatterns = [
     path('', IndexView.as_view(), name='home'),
     path('', include('apps.user.urls', namespace='user')),
     path('', include('apps.post.urls', namespace='post')),
-    path('registracion/', views.registro, name='registro'),
+    path('registro/', views.registro, name='registro'),
 ]
 
 if settings.DEBUG:
