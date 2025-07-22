@@ -1,0 +1,36 @@
+{% load static %}
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title_layout %}{% endblock title_layout %}</title>
+
+    <link rel="icon" href="{% static 'assets/favicon.png' %}" type="image/x-icon" />
+
+    {% block extra_head_layout%}  {% endblock extra_head_layout %}
+    <style type="module" src=""{%static 'js/tailwind.js' %}></style>
+    <style type="text/tailwindcss">
+      @theme {
+        --breakpoint-xs: 30rem;
+        --color-primary: rgb(26, 227, 15);
+        --color-secondary: rgb(16, 24, 90);
+      }
+    </style>
+
+    <div class="bg-">este es otro div </div>
+
+
+
+</head>
+<body class="bg-primary">
+    {% block content_layout %} {% endblock content_layout %}
+
+    {% block scripts_layout %} {% endblock scripts_layout %}
+</body>
+{% load django_browser_reload %}
+{% django_browser_reload_script %}
+</html>

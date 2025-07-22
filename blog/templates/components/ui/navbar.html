@@ -1,0 +1,35 @@
+ <nav>
+  <ul>
+    <li><a href="{% url 'index' %}" > Inicio</a></li>
+    <li><a href="{% url 'user:user_profile' %}" > Inicio</a></li>
+  </ul>
+</nav>
+
+          {/* Barra de búsqueda y acciones */}
+          <div className="flex items-center space-x-3">
+            {/* Búsqueda central */}
+            <div className="hidden sm:flex relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar libros, autores..."
+                className="pl-10 w-64 bg-slate-100 border-0 focus:bg-white transition-colors"
+              />
+            </div>
+
+            <Button variant="ghost" size="icon" className="sm:hidden">
+              <Search className="h-4 w-4" />
+            </Button>
+
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-4 w-4" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                3
+              </span>
+            </Button>
+
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="/placeholder.svg" />
+              <AvatarFallback>
+                <User className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
