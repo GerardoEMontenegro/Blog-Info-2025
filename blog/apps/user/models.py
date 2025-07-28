@@ -16,6 +16,15 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+    @property
+    def is_registered(self):
+        return self.groups.filter(name='registered').exists()
+    @property
+    def is_collaborator(self):
+        return self.groups.filter(name='collaborator').exists()
+    @property
+    def is_admin(self):
+        return self.groups.filter(name='admin').exists()
     
     def get_avartar_url(self):
         if self.avatar and hasattr(self.avatar, 'url'):
