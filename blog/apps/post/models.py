@@ -56,7 +56,7 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
 
     def __str__(self):
-        return self.id
+        return self.content
     
 def get_image_path(instance, filename):
     post_id = instance.post.id

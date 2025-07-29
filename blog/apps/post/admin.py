@@ -1,6 +1,5 @@
 from django.contrib import admin
 from apps.post.models import *
-from apps.user.models import User
 
 
 # Register your models here.
@@ -13,16 +12,28 @@ class PostAdmin(admin.ModelAdmin):
     search_fields = ('title', 'content')
     list_filter = ('category', 'author', 'created_at', 'allow_comments')
     prepopulated_fields = {'slug': ('title',)}
+    ordering = ('-created_at',)
 
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('id', 'post', 'author', 'created_at')
-    search_fields = ('title','author__user_name', 'id', '')
-    list_filter = ('post', 'author', 'created_at')
+    search_fields = ('id', 'author', 'created_at', 'post__title')
+    list_filter = ('id', 'author', 'created_at')
+    ordering = ('-created_at',)
 
-# class UserAdmin(admin.ModelAdmin):
-#     list_display = ('user_name', 'email', 'is_registered', 'is_collaborator', 'is_admin')
-#     search_fields = ('user_name', 'email')
-#     list_filter = ('is_registered', 'is_collaborator', 'is_admin')
+def active_images():
+    pass
+
+
+class PostImageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'post', 'image', 'created_at')
+    search_fields = ('post__id', 'post__title')
+    list_filter = ('post', 'created_at')
+    ordering = ('-created_at',)
+
+
+
+
+
 
 
 
@@ -34,4 +45,3 @@ class CommentAdmin(admin.ModelAdmin):
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Comment, CommentAdmin)
-# admin.site.register(User, UserAdmin)
