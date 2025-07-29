@@ -23,6 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY') 
 
 
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+
 
 # Application definition
 
@@ -38,6 +42,7 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.post',
     'apps.categorias',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
