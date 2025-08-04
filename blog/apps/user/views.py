@@ -1,11 +1,14 @@
 from django.shortcuts import redirect, render
 from django.views.generic import TemplateView, RedirectView
+from django.contrib.auth.models import Group
 from django.urls import reverse_lazy
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.forms import AuthenticationForm
-from apps.user.forms import RegistroForm
+from .forms import CustomUserCreationForm, AvatarUpdateForm
 from django.contrib.auth import login, logout
+from .models import User
+
 
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
@@ -13,19 +16,37 @@ class UserProfileView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user'] = self.request.user
+        user = self.request.user
+        context['user'] = user
+        context['posts'] = user.posts.all().order_by('-created_at')
         return context
+    
+class AvatarUpdateView(LoginRequiredMixin, UpdateView):
+    model = User
+    form_class = AvatarUpdateForm
+    template_name = 'user/update_avatar.html'
+    success_url = reverse_lazy('user:user_profile')  # Ajustá según el nombre real de tu URL de perfil
+
+    def get_object(self):
+        return self.request.user
 
 
-class Registro_View(FormView):
+from django.contrib.auth.models import Group
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView
+from .forms import CustomUserCreationForm  # Asegúrate de importar tu formulario personalizado
+
+class Registro_View(CreateView):
+    form_class = CustomUserCreationForm
     template_name = 'auth/auth_register.html'
-    form_class = RegistroForm
     success_url = reverse_lazy('user:login')
 
     def form_valid(self, form):
-        user = form.save()
-        login(self.request, user)
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        registered_group = Group.objects.get(name='Registered')  # Asegúrate que el grupo exista
+        self.object.groups.add(registered_group)  # Aquí se corrige el método
+        return response
+        
 
     def get_form(self, form_class=None):
         """

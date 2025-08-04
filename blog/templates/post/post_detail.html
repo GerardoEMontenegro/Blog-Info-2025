@@ -1,13 +1,40 @@
 {% extends 'layouts/general_layout.html' %}
 
-
-{% block title %}
-POST
-{% endblock title %}
-
+{% block title_layout %}    
+  {% block title %}
+    {{ object.title }}  {# ← Corregido: title, no titulo #}
+  {% endblock title %}
+  | Blog
+{% endblock title_layout %}
 
 {% block content %}
-contenido del post
-{% endblock content %}
+<main class="container mx-auto px-4 py-6">
+  <article>
+    <h1 class="text-3xl font-bold mb-2">{{ object.title }}</h1>
+    <p class="text-sm text-gray-500 mb-4">Publicado el {{ object.created_at|date:"d M Y" }}</p>
     
-    
+    <div class="prose max-w-none text-gray-800">
+      {{ object.content|linebreaks }}
+    </div>
+
+    {# ✅ Corregido: author, no autor #}
+    {% if user.is_authenticated and object.author == user %}
+      <<div class="mt-6 flex flex-wrap gap-3">
+  <a href="{% url 'post:post_edit' object.slug %}"
+     class="inline-block bg-[#3F4F36] hover:bg-[#2f3c28] text-white font-semibold py-2 px-4 rounded-md transition duration-200">
+    ✏️ Editar
+  </a>
+  <form method="post" action="{% url 'post:post_delete' object.slug %}" onsubmit="return confirm('¿Eliminar este post?');">
+    {% csrf_token %}
+    <button type="submit"
+            class="inline-block bg-[#3F4F36] hover:bg-[#2f3c28] text-white font-semibold py-2 px-4 rounded-md transition duration-200">
+      🗑️ Eliminar
+    </button>
+  </form>
+</div>
+    {% endif %}
+
+    <a href="{% url 'user:user_profile' %}" class="inline-block mt-6 text-green-600 hover:underline">← Volver al inicio</a>
+  </article>
+</main>
+{% endblock %}

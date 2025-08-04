@@ -1,13 +1,26 @@
 {% extends 'layouts/general_layout.html' %}
 
-
 {% block title %}
-Inicio
+Inicio - Mi Sitio
 {% endblock title %}
 
-
 {% block content %}
-contenido de inicio
+ <h1 class="text-3xl font-bold mb-6">Últimos posts</h1>
+
+  {% if ultimos_posts %}
+    <ul class="space-y-4">
+      {% for post in ultimos_posts %}
+        <li class="border-b pb-2">
+          <h2 class="text-xl font-semibold">{{ post.titulo }}</h2>
+          <p class="text-sm text-gray-500">Publicado el {{ post.created_at|date:"d M Y" }}</p>
+          <p class="mt-1 text-gray-700 truncate">{{ post.contenido|truncatechars:150 }}</p>
+          <a href="{% url 'nombre_de_la_vista_del_post' post.id %}" class="text-green-600 hover:underline">Leer más</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500">No hay publicaciones aún.</p>
+  {% endif %}
+  
+</main>
 {% endblock content %}
-    
-    

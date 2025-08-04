@@ -1,4 +1,8 @@
+{% load widget_tweaks %}
 {% load static %}
+{% load django_browser_reload %}
+{% django_browser_reload_script %}
+
 
 
 
@@ -9,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title_layout %}{% endblock title_layout %}</title>
 
-    <link rel="icon" href="{% static 'assets/favicon.png' %}" type="image/x-icon" />
+    <link rel="icon" href="{% static 'assets/favicon2.png' %}" type="image/x-icon" />
 
     {% block extra_head_layout%}  {% endblock extra_head_layout %}
     <script type="module" src="{% static 'js/tailwind.js' %}"></script>
@@ -23,11 +27,10 @@
 
 
 </head>
-<body class="bg-primary">
+<body >
     {% block content_layout %} {% endblock content_layout %}
 
     {% block scripts_layout %} {% endblock scripts_layout %}
 </body>
-{% load django_browser_reload %}
-{% django_browser_reload_script %}
+
 </html>

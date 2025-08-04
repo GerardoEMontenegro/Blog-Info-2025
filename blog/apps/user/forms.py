@@ -2,34 +2,37 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+import re
 
 User = get_user_model()
 
-class RegistroForm(UserCreationForm):
+
+class AvatarUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['avatar']
+
+class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
+    alias = forms.CharField(required=False, max_length=30)
 
     class Meta:
         model = User
-        fields = ['username', 'alias', 'email', 'avatar', 'password1', 'password2']
-
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        if ' ' in username:
-            raise forms.ValidationError("El nombre de usuario no puede contener espacios.")
-        if len(username) < 4:
-            raise forms.ValidationError("Debe tener al menos 4 caracteres.")
-        return username
-
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if not email.endswith('@gmail.com'):
-            raise forms.ValidationError("Solo se permiten correos de Gmail.")
-        if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("Este email ya está registrado.")
-        return email
+        fields = ("username", "alias", "email", "password1", "password2")
 
     def clean_password1(self):
-        password = self.cleaned_data.get('password1')
-        if not any(char in "!@#$%^&*()" for char in password):
-            raise forms.ValidationError("La contraseña debe contener al menos un símbolo especial.")
+        password = self.cleaned_data.get("password1")
+
+        if len(password) < 8:
+            raise forms.ValidationError("La contraseña debe tener al menos 8 caracteres.")
+
+        if not re.search(r'[A-Z]', password):
+            raise forms.ValidationError("La contraseña debe incluir al menos una letra mayúscula.")
+
+        if not re.search(r'[a-z]', password):
+            raise forms.ValidationError("La contraseña debe incluir al menos una letra minúscula.")
+
+        if not re.search(r'\d', password):
+            raise forms.ValidationError("La contraseña debe incluir al menos un número.")
+
         return password
