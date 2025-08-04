@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.utils.text import slugify
 import uuid
 import os
 
@@ -36,7 +37,7 @@ class Post(models.Model):
         super().save(*args, **kwargs)
 
     def generate_unique_slug(self):
-        slug = self.slugify(self.title)
+        slug = slugify(self.title)
         unique_slug = slug
         counter = 1
         while Post.objects.filter(slug=unique_slug).exists():

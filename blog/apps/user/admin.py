@@ -1,15 +1,11 @@
 from django.contrib import admin
-from apps.user.models import User
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
-
-# Register your models here.
-
+from apps.user.models import User
 
 
-
-class UserAdmin(admin.ModelAdmin):
-    fieldsets = UserAdmin.fieldsets + (
+class CustomUserAdmin(BaseUserAdmin):
+    fieldsets = BaseUserAdmin.fieldsets + (
         (None, {'fields': ('alias', 'avatar')}),
     )
 
@@ -21,72 +17,78 @@ class UserAdmin(admin.ModelAdmin):
 
     def is_registered(self, obj):
         return obj.groups.filter(name='Registered').exists()
+    is_registered.short_description = 'Es Usuario Registrado'
     is_registered.boolean = True
-    is_registered.short_description = 'Usuario registrado'
-
-    def is_admin(self, obj):
-        return obj.groups.filter(name='Admin').exists()
-    is_admin.boolean = True
-    is_admin.short_description = 'Usuario administrador'
 
     def is_collaborator(self, obj):
-        return obj.groups.filter(name='Collaborator').exists()
+        return obj.groups.filter(name='Collaborators').exists()
+    is_collaborator.short_description = 'Es Colaborador'
     is_collaborator.boolean = True
-    is_collaborator.short_description = 'Usuario colaborador'
-    
+
+    def is_admin(self, obj):
+        return obj.groups.filter(name='Admins').exists()
+    is_admin.short_description = 'Es Administrador'
+    is_admin.boolean = True
+
     def add_to_registered(self, request, queryset):
         registered_group = Group.objects.get(name='Registered')
         for user in queryset:
-            user.groups.add(Group.objects.get(name='Registered'))
-        self.message_user(request, "Usuarios registrados correctamente")
-    add_to_registered.short_description = 'Agregar usuarios a grupo Registrados'
+            user.groups.add(registered_group)
+        self.message_user(
+            request, "Los usuarios seleccionados fueron añadidos al grupo 'Registered'.")
+    add_to_registered.short_description = 'Agregar a Usuarios Registrados'
 
-    def add_to_admin(self, request, queryset):
-        admin_group = Group.objects.get(name='Admin')
+    def add_to_collaborators(self, request, queryset):
+        collaborators_group = Group.objects.get(name='Collaborators')
         for user in queryset:
-            user.groups.add(admin_group)
-        self.message_user(request, "Usuarios administradores correctamente")
-    add_to_admin.short_description = 'Agregar usuarios a grupo Administradores'
+            user.groups.add(collaborators_group)
+        self.message_user(
+            request, "Los usuarios seleccionados fueron añadidos al grupo 'Collaborators'.")
+    add_to_collaborators.short_description = 'Agregar a Colaboradores'
 
-    def add_to_collaborator(self, request, queryset):
-        collaborator_group = Group.objects.get(name='Collaborator')
+    def add_to_admins(self, request, queryset):
+        admins_group = Group.objects.get(name='Admins')
         for user in queryset:
-            user.groups.add(collaborator_group)
-        self.message_user(request, "Usuarios colaboradores correctamente")
-    add_to_collaborator.short_description = 'Agregar usuarios a grupo Colaboradores'
+            user.groups.add(admins_group)
+        self.message_user(
+            request, "Los usuarios seleccionados fueron añadidos al grupo 'Admins'.")
+    add_to_admins.short_description = 'Agregar a Administradores'
 
-    def remove_to_registered(self, request, queryset):
+    def remove_from_registered(self, request, queryset):
         registered_group = Group.objects.get(name='Registered')
         for user in queryset:
-            user.groups.remove(Group.objects.get(name='Registered'))
-        self.message_user(request, "Usuarios registrados correctamente")
-    remove_to_registered.short_description = 'Eliminar usuarios a grupo Registrados'
+            user.groups.remove(registered_group)
+        self.message_user(
+            request, "Los usuarios seleccionados fueron removidos del grupo 'Registered'.")
+    remove_from_registered.short_description = 'Remover de Usuarios Registrados'
 
-    def remove_to_admin(self, request, queryset):
-        admin_group = Group.objects.get(name='Admin')
+    def remove_from_collaborators(self, request, queryset):
+        collaborators_group = Group.objects.get(name='Collaborators')
         for user in queryset:
-            user.groups.remove(admin_group)
-        self.message_user(request, "Usuarios administradores correctamente")
-    remove_to_admin.short_description = 'Eliminar usuarios a grupo Administradores'
+            user.groups.remove(collaborators_group)
+        self.message_user(
+            request, "Los usuarios seleccionados fueron removidos del grupo 'Collaborators'.")
+    remove_from_collaborators.short_description = 'Remover de Colaboradores'
 
-    def remove_to_collaborator(self, request, queryset):
-        collaborator_group = Group.objects.get(name='Collaborator')
+    def remove_from_admins(self, request, queryset):
+        admins_group = Group.objects.get(name='Admins')
         for user in queryset:
-            user.groups.remove(collaborator_group)
-        self.message_user(request, "Usuarios colaboradores correctamente")
-    remove_to_collaborator.short_description = 'Eliminar usuarios a grupo Colaboradores'
+            user.groups.remove(admins_group)
+        self.message_user(
+            request, "Los usuarios seleccionados fueron removidos del grupo 'Admins'.")
+    remove_from_admins.short_description = 'Remover de Administradores'
 
-    list_display = ('username', 'email', 'is_staff', 'is_active',
-                    'is_superuser', 'is_registered', 'is_admin', 'is_collaborator')
+    list_display = ('username', 'email', 'is_staff', 'is_superuser',
+                    'is_registered', 'is_collaborator', 'is_admin')
 
     actions = [
-        'add_to_registered',
-        'add_to_admin',
-        'add_to_collaborator',
-        ]
+        add_to_registered,
+        add_to_collaborators,
+        add_to_admins,
+        remove_from_registered,
+        remove_from_collaborators,
+        remove_from_admins,
+    ]
 
 
-
-
-
-admin.site.register(User, UserAdmin)
+admin.site.register(User, CustomUserAdmin)

@@ -1,11 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+{% load widget_tweaks %}
+{% load static %}
+{% load django_browser_reload %}
+{% django_browser_reload_script %}
+{% extends 'layouts/base_layout.html'%}
+
+
+
+<script type="module" src="{% static 'js/tailwind.js' %}"></script>
+
+        
+<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 bg-primary">
+    <link rel="icon" href="{% static 'assets/favicon2.png' %}" type="image/x-icon" />
+</div>
+
+
+{% block _content %}
+
+<main class="">
+
+</main>
     
-</body>
-</html>
+{% endblock _content %}
+    
