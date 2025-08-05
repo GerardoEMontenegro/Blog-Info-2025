@@ -4,8 +4,6 @@
 {% load django_browser_reload %}
 {% django_browser_reload_script %}
 
-
-
 {% block title_layout %}
   Editar "{{ object.title }}" | Blog
 {% endblock title_layout %}
@@ -15,68 +13,103 @@
   <div class="bg-white shadow-lg rounded-xl border border-gray-200 overflow-hidden">
     <div class="bg-blue-600 text-white p-4">
       <h1 class="text-xl font-bold">✏️ Editar Publicación</h1>
-      <p class="text-sm">Modifica los detalles de tu entrada</p>
+      <p class="text-sm">Modifica el contenido y las imágenes de tu entrada</p>
     </div>
 
-    <form method="post" class="flex-col p-6">
+    <form method="post" class="flex flex-col p-6" enctype="multipart/form-data">
       {% csrf_token %}
 
       {% if form.non_field_errors %}
-        <div class="mb-5 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+        <div class="w-full mb-5 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
           {{ form.non_field_errors }}
         </div>
       {% endif %}
 
-      <div class="mb-5 border-b border-gray-200 pb-3">
+      <!-- TÍTULO -->
+      <div class="mb-5">
         <label for="{{ form.title.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-1">
           📝 Título
         </label>
-       <label class="flex mb-5  rounded-sm border-2 border-solid  ">{{ form.title }}</label> 
+        {% render_field form.title class="w-full px-3 py-2 border border-gray-300 rounded-md" %}
         {% if form.title.errors %}
-          <p class="mt-1 text-sm text-red-600">{{ form.title.errors.as_text }}</p>
+          <p class="text-sm text-red-600 mt-1">{{ form.title.errors.0 }}</p>
         {% endif %}
       </div>
 
+      <!-- CONTENIDO -->
       <div class="mb-5">
         <label for="{{ form.content.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-1">
           ✍️ Contenido
         </label>
-        <div for="flex">{{ form.content }}</div>
+        {% render_field form.content class="w-full px-3 py-2 border border-gray-300 rounded-md h-40" %}
         {% if form.content.errors %}
-          <p class="mt-1 text-sm text-red-600">{{ form.content.errors.as_text }}</p>
+          <p class="text-sm text-red-600 mt-1">{{ form.content.errors.0 }}</p>
         {% endif %}
       </div>
 
+      <!-- CATEGORÍA -->
       {% if form.category %}
         <div class="mb-5">
           <label for="{{ form.category.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-1">
             🏷️ Categoría
           </label>
-          {{ form.category }}
+          {% render_field form.category class="w-full px-3 py-2 border border-gray-300 rounded-md" %}
           {% if form.category.errors %}
-            <p class="mt-1 text-sm text-red-600">{{ form.category.errors.as_text }}</p>
+            <p class="text-sm text-red-600 mt-1">{{ form.category.errors.0 }}</p>
           {% endif %}
         </div>
       {% endif %}
 
+      <!-- PERMITIR COMENTARIOS -->
       {% if form.allow_comments %}
         <div class="mb-5 flex items-center">
-          {{ form.allow_comments }}
+          {% render_field form.allow_comments class="form-checkbox text-blue-600" %}
           <label for="{{ form.allow_comments.id_for_label }}" class="ml-2 text-sm font-semibold text-gray-700">
-            ✅ Permitir comentarios
+            Permitir comentarios
           </label>
-          {% if form.allow_comments.errors %}
-            <p class="ml-3 text-sm text-red-600">{{ form.allow_comments.errors.as_text }}</p>
-          {% endif %}
         </div>
       {% endif %}
 
+      <!-- FORMSET DE IMÁGENES -->
+      <hr class="my-6">
+    <h2 class="text-xl font-semibold">Imágenes</h2>
+    
+    {{ images_formset.management_form }}
+    {% for form in images_formset.forms %}
+       <div class="mb-6 p-4 border rounded-md">
+    
+            <!-- Campo oculto ID (obligatorio) -->
+            {% for hidden in form.hidden_fields %}
+              {{ hidden }}
+            {% endfor %}
+
+            <label class="block font-medium mb-2">Imagen {{ forloop.counter }}</label>
+            {{ form.image }}
+
+            {% if form.instance.image %}
+              <div class="mt-2">
+                <p class="text-sm text-gray-600">Imagen actual:</p>
+                <img src="{{ form.instance.image.url }}" class="w-32 h-auto rounded shadow">
+              </div>
+            {% endif %}
+
+            {% if form.DELETE %}
+              <label class="block mt-2 text-red-600">
+                {{ form.DELETE }} Eliminar esta imagen
+              </label>
+            {% endif %}
+
+            {% for error in form.image.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+            {% endfor %}
+          </div>
+     {% endfor %}
+
+      <!-- BOTONES -->
       <div class="flex flex-wrap gap-3 mt-8">
         <button type="submit"
                 class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 
-                       text-white font-medium text-sm rounded-lg shadow-sm 
-                       transition duration-200 focus:outline-none focus:ring-2 
-                       focus:ring-blue-500 focus:ring-offset-2">
+                       text-white font-medium text-sm rounded-lg shadow-sm transition duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
@@ -85,8 +118,7 @@
 
         <a href="{% url 'post:post_detail' object.slug %}"
            class="flex items-center gap-2 px-5 py-2.5 bg-gray-500 hover:bg-gray-600 
-                  text-white font-medium text-sm rounded-lg transition duration-200 
-                  focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                  text-white font-medium text-sm rounded-lg transition duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>

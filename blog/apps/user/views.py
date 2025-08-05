@@ -31,11 +31,6 @@ class AvatarUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.user
 
 
-from django.contrib.auth.models import Group
-from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
-from .forms import CustomUserCreationForm  # Asegúrate de importar tu formulario personalizado
-
 class Registro_View(CreateView):
     form_class = CustomUserCreationForm
     template_name = 'auth/auth_register.html'

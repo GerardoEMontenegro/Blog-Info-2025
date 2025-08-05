@@ -1,83 +1,71 @@
+# apps/user/signals.py
+
 from django.contrib.auth.models import Permission, Group
 from django.contrib.contenttypes.models import ContentType
-from apps.user.models import User
-from apps.post.models import Post, Comment
-from django.db.models.signals import post_save
+from django.db.models.signals import post_migrate
 from django.dispatch import receiver
+from apps.post.models import Post, Comment
 
 
+@receiver(post_migrate)
+def create_groups_and_permissions(sender, **kwargs):
+    try:
+        post_ct = ContentType.objects.get_for_model(Post)
+        comment_ct = ContentType.objects.get_for_model(Comment)
 
-@receiver(post_save, sender=User)
-def create_groups_and_permissions(sender, instance, created, **kwargs):
-    if created and instance.is_superuser:
-        try:
-            post_content_type = ContentType.objects.get_for_model(Post)
-            comment_content_type = ContentType.objects.get_for_model(Comment)
+        # Obtener permisos
+        perms = {
+            'post': {
+                'view': Permission.objects.get(codename='view_post', content_type=post_ct),
+                'add': Permission.objects.get(codename='add_post', content_type=post_ct),
+                'change': Permission.objects.get(codename='change_post', content_type=post_ct),
+                'delete': Permission.objects.get(codename='delete_post', content_type=post_ct),
+            },
+            'comment': {
+                'view': Permission.objects.get(codename='view_comment', content_type=comment_ct),
+                'add': Permission.objects.get(codename='add_comment', content_type=comment_ct),
+                'change': Permission.objects.get(codename='change_comment', content_type=comment_ct),
+                'delete': Permission.objects.get(codename='delete_comment', content_type=comment_ct),
+            }
+        }
 
-            # Permisos de POST
-            view_post_permission = Permission.objects.get(
-                codename='view_post', content_type=post_content_type)
-            add_post_permission = Permission.objects.get(
-                codename='add_post', content_type=post_content_type)
-            change_post_permission = Permission.objects.get(
-                codename='change_post', content_type=post_content_type)
-            delete_post_permission = Permission.objects.get(
-                codename='delete_post', content_type=post_content_type)
+        # Registered
+        registered_group, _ = Group.objects.get_or_create(name='Registered')
+        registered_group.permissions.set([
+            perms['post']['view'],
+            perms['comment']['view'],
+            perms['comment']['add'],
+            perms['comment']['change'],
+            perms['comment']['delete'],
+        ])
 
-            # Permisos de COMMENT
-            view_comment_permission = Permission.objects.get(
-                codename='view_comment', content_type=comment_content_type)
-            add_comment_permission = Permission.objects.get(
-                codename='add_comment', content_type=comment_content_type)
-            change_comment_permission = Permission.objects.get(
-                codename='change_comment', content_type=comment_content_type)
-            delete_comment_permission = Permission.objects.get(
-                codename='delete_comment', content_type=comment_content_type)
+        # Collaborators
+        collaborator_group, _ = Group.objects.get_or_create(name='Collaborators')
+        collaborator_group.permissions.set([
+            perms['post']['view'],
+            perms['post']['add'],
+            perms['post']['change'],
+            perms['post']['delete'],
+            perms['comment']['view'],
+            perms['comment']['add'],
+            perms['comment']['change'],
+            perms['comment']['delete'],
+        ])
 
-            # Crear grupos de usuarios registrados
-            registered_group, created = Group.objects.get_or_create(
-                name="Registered"
-            )
-            registered_group.permissions.add(
-                view_post_permission,  # permiso para ver post
-                view_comment_permission,  # permiso para ver comentarios del post
-                add_comment_permission,  # permiso para crear comentarios del post
-                change_comment_permission,  # permiso para actualizar de su comentario en un post
-                delete_comment_permission,  # permiso para borrar su comentario en un post
-            )
+        # Admins
+        admin_group, _ = Group.objects.get_or_create(name='Admins')
+        admin_group.permissions.set([
+            perms['post']['view'],
+            perms['post']['add'],
+            perms['post']['change'],
+            perms['post']['delete'],
+            perms['comment']['view'],
+            perms['comment']['add'],
+            perms['comment']['change'],
+            perms['comment']['delete'],
+        ])
 
-            # Crear grupos de usuarios colaboradores
-            registered_group, created = Group.objects.get_or_create(
-                name="Collaborators"
-            )
-            registered_group.permissions.add(
-                view_post_permission,  # permiso para ver post
-                add_post_permission,  # permiso para crear post
-                change_post_permission,  # permiso para actualizar su post
-                delete_post_permission,  # permiso para borrar su post
-                view_comment_permission,  # permiso para ver comentarios del post
-                add_comment_permission,  # permiso para crear comentarios del post
-                change_comment_permission,  # permiso para actualizar de su comentario en un post
-                delete_comment_permission,  # permiso para borrar su comentario en un post
-            )
+        print("✅ Grupos y permisos creados correctamente tras aplicar migraciones.")
 
-            # Crear grupos de usuarios administradores
-            registered_group, created = Group.objects.get_or_create(
-                name="Admins"
-            )
-            registered_group.permissions.add(
-                view_post_permission,  # permiso para ver post
-                add_post_permission,  # permiso para crear post
-                change_post_permission,  # permiso para actualizar su post
-                delete_post_permission,  # permiso para borrar cualquier post
-                view_comment_permission,  # permiso para ver comentarios del post
-                add_comment_permission,  # permiso para crear comentarios del post
-                change_comment_permission,  # permiso para actualizar de su comentario en un post
-                delete_comment_permission,  # permiso para borrar su comentario de cualquier post
-            )
-
-            print("Grupos y Permisos creados exitosamente.")
-        except ContentType.DoesNotExist:
-            print("El tipo aun no se encuentra disponible.")
-        except Permission.DoesNotExist:
-            print("Uno o mas permisos no se encuentran disponibles")
+    except Permission.DoesNotExist:
+        print("❌ Algunos permisos aún no están disponibles. Asegúrate de haber aplicado todas las migraciones.")

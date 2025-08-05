@@ -2,7 +2,7 @@
 
 {% block title_layout %}    
   {% block title %}
-    {{ object.title }}  {# ← Corregido: title, no titulo #}
+    {{ object.title }}
   {% endblock title %}
   | Blog
 {% endblock title_layout %}
@@ -10,31 +10,125 @@
 {% block content %}
 <main class="container mx-auto px-4 py-6">
   <article>
-    <h1 class="text-3xl font-bold mb-2">{{ object.title }}</h1>
-    <p class="text-sm text-gray-500 mb-4">Publicado el {{ object.created_at|date:"d M Y" }}</p>
-    
-    <div class="prose max-w-none text-gray-800">
-      {{ object.content|linebreaks }}
+    <!-- Título y fecha -->
+    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
+      {{ object.title }}
+    </h1>
+    <p class="text-sm text-gray-500 mb-6">
+      Publicado el {{ object.created_at|date:"d M Y" }}
+    </p>
+
+    <!-- Categoría y etiquetas -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      {% if object.category %}
+        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+          {{ object.category.title }}
+        </span>
+      {% endif %}
+
+      {% if object.tags.exists %}
+        {% for tag in object.tags.all %}
+          <span class="bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1 rounded-full">
+            {{ tag.name }}
+          </span>
+        {% endfor %}
+      {% endif %}
     </div>
 
-    {# ✅ Corregido: author, no autor #}
+    <!-- Contenido con imagen -->
+    <div class="flex flex-col md:flex-row md:items-start gap-8 mb-10">
+      <div class="prose prose-lg max-w-none md:flex-1 text-gray-800 space-y-5">
+        {{ object.content|linebreaks }}
+      </div>
+
+      {% if object.images.exists %}
+        <div class="mt-6 md:mt-0 md:flex-shrink-0 md:w-64 rounded-xl overflow-hidden shadow-lg">
+          <img 
+            src="{{ object.images.first.image.url }}" 
+            alt="Imagen de {{ object.title }}" 
+            class="w-full h-auto object-cover rounded-lg transition-transform duration-300 hover:scale-105"
+          >
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Botones de edición -->
     {% if user.is_authenticated and object.author == user %}
-      <<div class="mt-6 flex flex-wrap gap-3">
-  <a href="{% url 'post:post_edit' object.slug %}"
-     class="inline-block bg-[#3F4F36] hover:bg-[#2f3c28] text-white font-semibold py-2 px-4 rounded-md transition duration-200">
-    ✏️ Editar
-  </a>
-  <form method="post" action="{% url 'post:post_delete' object.slug %}" onsubmit="return confirm('¿Eliminar este post?');">
-    {% csrf_token %}
-    <button type="submit"
-            class="inline-block bg-[#3F4F36] hover:bg-[#2f3c28] text-white font-semibold py-2 px-4 rounded-md transition duration-200">
-      🗑️ Eliminar
-    </button>
-  </form>
-</div>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href="{% url 'post:post_edit' object.slug %}"
+           class="inline-flex items-center gap-2 bg-[#3F4F36] hover:bg-[#2f3c28] text-white font-semibold py-2 px-4 rounded-md transition duration-200">
+          ✏️ Editar
+        </a>
+        <form method="post" action="{% url 'post:post_delete' object.slug %}" onsubmit="return confirm('¿Eliminar este post?');">
+          {% csrf_token %}
+          <button type="submit"
+                  class="inline-flex items-center gap-2 bg-[#3F4F36] hover:bg-[#2f3c28] text-white font-semibold py-2 px-4 rounded-md transition duration-200">
+            🗑️ Eliminar
+          </button>
+        </form>
+      </div>
     {% endif %}
 
-    <a href="{% url 'user:user_profile' %}" class="inline-block mt-6 text-green-600 hover:underline">← Volver al inicio</a>
+    <!-- Volver -->
+    <a href="{% url 'user:user_profile' %}" class="inline-block mt-10 text-green-600 hover:underline text-sm font-medium">
+      ← Volver al inicio
+    </a>
   </article>
+
+  <hr class="my-10 border-gray-200">
+
+  <!-- Comentarios -->
+  <section>
+    <h3 class="text-2xl font-semibold text-gray-900 mb-6">💬 Comentarios</h3>
+
+    {% if object.allow_comments %}
+      {% if user.is_authenticated %}
+        <form method="post" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-8">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="bg-red-50 text-red-800 p-3 rounded-md text-sm mb-4">
+              {{ form.non_field_errors }}
+            </div>
+          {% endif %}
+
+          <div>
+            {{ form.content.label_tag }}
+            {{ form.content }}
+            {% if form.content.errors %}
+              <p class="text-sm text-red-600 mt-1">{{ form.content.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <button type="submit"
+                  class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition">
+            Enviar comentario
+          </button>
+        </form>
+      {% else %}
+        <p class="text-gray-600 mb-8 text-sm">
+          <a href="{% url 'user:login' %}" class="text-blue-600 hover:underline font-medium">Iniciá sesión</a> 
+          para comentar.
+        </p>
+      {% endif %}
+    {% else %}
+      <p class="text-gray-500 mb-8 text-sm">Los comentarios están deshabilitados para este post.</p>
+    {% endif %}
+
+    <!-- Lista de comentarios -->
+    <ul class="space-y-5">
+      {% for comment in comments %}
+        <li class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:shadow transition-shadow duration-200">
+          <div class="flex justify-between items-start mb-2">
+            <strong class="text-gray-800 font-medium">{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+            <span class="text-xs text-gray-500">{{ comment.created_at|date:"d M Y H:i" }}</span>
+          </div>
+          <p class="text-gray-700 text-sm leading-relaxed">{{ comment.content|linebreaks }}</p>
+        </li>
+      {% empty %}
+        <li class="text-gray-500 text-sm">No hay comentarios aún.</li>
+      {% endfor %}
+    </ul>
+  </section>
 </main>
 {% endblock %}
