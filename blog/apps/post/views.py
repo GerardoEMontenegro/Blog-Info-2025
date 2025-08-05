@@ -1,13 +1,12 @@
-from django.views.generic import TemplateView
-from .models import Post
-from .forms import PostForm
+from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic.detail import DetailView
 from django.utils.timezone import now
 from django.contrib import messages
 from django.shortcuts import redirect
+from .models import Post
+from .forms import PostForm, CommentForm, ImageFormSet
 
 
 class PostDetailView(DetailView):
@@ -18,14 +17,52 @@ class PostDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post'] = self.object  # <- Esto permite usar {{ post }} en el template
+        post = self.object
+        context['post'] = post
+        context['comments'] = post.comments.order_by('-created_at')
+        context['form'] = CommentForm() if post.allow_comments else None
         return context
-    
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        post = self.object
+
+        # Validar si se permiten comentarios
+        if not post.allow_comments:
+            messages.error(request, "Los comentarios están deshabilitados para este post.")
+            return redirect('post:post_detail', slug=post.slug)
+
+        # Validar si el usuario está autenticado
+        if not request.user.is_authenticated:
+            messages.error(request, "Debes iniciar sesión para comentar.")
+            return redirect('login')
+
+        # Procesar el formulario
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+            comment.save()
+            messages.success(request, "Tu comentario fue publicado.")
+            return redirect('post:post_detail', slug=post.slug)
+
+        # Si el formulario no es válido, mostrar el detalle con errores
+        context = self.get_context_data()
+        context['form'] = form
+        return self.render_to_response(context)
+
+
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
     template_name = 'post/post_create.html'
-    success_url = reverse_lazy('home')
+
+    def get_context_data(self, **kwargs):
+            context = super().get_context_data(**kwargs)
+            if 'images_formset' not in context:
+                context['images_formset'] = ImageFormSet(instance=self.object if self.object else Post())
+            return context
 
     def form_valid(self, form):
         user = self.request.user
@@ -50,22 +87,45 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         form.instance.author = user
         return super().form_valid(form)
 
-
+    def get_success_url(self):
+        return reverse('post:post_detail', kwargs={'slug': self.object.slug})
 
 
 class PostEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title', 'content', 'category']
+    form_class = PostForm
     template_name = 'post/post_update.html'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
-    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.method == 'POST':
+            context['images_formset'] = ImageFormSet(self.request.POST, self.request.FILES, instance=self.object)
+        else:
+            context['images_formset'] = ImageFormSet(instance=self.object)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        images_formset = context['images_formset']
+
+        if images_formset.is_valid():
+            self.object = form.save()
+            images_formset.instance = self.object
+            images_formset.save()
+            return redirect(self.get_success_url())
+        else:
+            print("Errores formset:", images_formset.errors)
+            for i, f in enumerate(images_formset.forms):
+                print(f"Errores formset form {i}: {f.errors}")
+            return self.render_to_response(self.get_context_data(form=form))
+
     def get_success_url(self):
-        return reverse_lazy('user:user_profile')
+        return reverse('post:post_detail', kwargs={'slug': self.object.slug})
 
     def test_func(self):
-        post = self.get_object()
-        return post.author == self.request.user
+        return self.get_object().author == self.request.user
 
 
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -76,8 +136,8 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     slug_url_kwarg = 'slug'
 
     def test_func(self):
-        post = self.get_object()
-        return post.author == self.request.user
+        return self.get_object().author == self.request.user
 
-
-
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "El post fue eliminado exitosamente.")
+        return super().delete(request, *args, **kwargs)

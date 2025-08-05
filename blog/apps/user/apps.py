@@ -8,6 +8,3 @@ class UserConfig(AppConfig):
         from django.contrib.auth.models import Group
         import apps.user.signals
 
-        # Asegurar existencia de grupos
-        for group_name in ['Registered', 'Collaborators', 'Admins']:
-            Group.objects.get_or_create(name=group_name)
